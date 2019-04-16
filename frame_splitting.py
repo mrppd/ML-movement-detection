@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Created on Sat Apr 13 00:18:22 2019
 
@@ -12,30 +11,42 @@ import matplotlib.pyplot as plt
 import statistics as st
 from scipy.signal import savgol_filter
 from scipy.ndimage.filters import gaussian_filter
+import os
+import pickle
 
 threshold = 4
 url = "K:/pig_videos/Videos_ML_Project/"
-fileName = "Train1_Cam3.mp4"
+fileName = "Train1_Cam1"
+ext = ".mp4"
+
+writeVideos = False
+writeImages = False
+
 """
 sub = "MOG2"
 if sub == 'MOG2':
     backSub = cv2.createBackgroundSubtractorMOG2()
 else:
     backSub = cv2.createBackgroundSubtractorKNN()
+
 """    
-    
-capture = cv2.VideoCapture(url+fileName)
+
+capture = cv2.VideoCapture(url+fileName+ext)
 if not capture.isOpened:
     print('Unable to open: ' + url)
     exit(0)
 
+
+
 frame_width = int(capture.get( cv2.CAP_PROP_FRAME_WIDTH))
 frame_height = int(capture.get( cv2.CAP_PROP_FRAME_HEIGHT))
 FPS = capture.get(cv2.CAP_PROP_FPS)
-outLessMove = cv2.VideoWriter(r'K:\pig_videos\Videos_ML_Project\less_movement_'+fileName, cv2.VideoWriter_fourcc('A','V','C','1'), 
-                              FPS, (frame_width,frame_height), True)
-outHighMove = cv2.VideoWriter(r'K:\pig_videos\Videos_ML_Project\high_movement_'+fileName, cv2.VideoWriter_fourcc('A','V','C','1'), 
-                              FPS, (frame_width,frame_height), True)
+if(writeVideos==True):
+    outLessMove = cv2.VideoWriter(r'K:\pig_videos\Videos_ML_Project\less_movement_'+fileName+ext, cv2.VideoWriter_fourcc('A','V','C','1'), 
+                                  FPS, (frame_width,frame_height), True)
+    outHighMove = cv2.VideoWriter(r'K:\pig_videos\Videos_ML_Project\high_movement_'+fileName+ext, cv2.VideoWriter_fourcc('A','V','C','1'), 
+                                  FPS, (frame_width,frame_height), True)
+
 
 #capture.set(cv2.CAP_PROP_POS_AVI_RATIO,1)
 #length = capture.get(cv2.CAP_PROP_POS_MSEC)
@@ -65,9 +76,10 @@ while True:
     if(int(capture.get(cv2.CAP_PROP_POS_FRAMES))%1000==0):
         percent = (capture.get(cv2.CAP_PROP_POS_FRAMES)/totalFrames)*100
         print(str(round(percent)) + "%")
-        
 
-plt.plot(normList[0:2000])
+
+
+plt.plot(normList)
 
 def smooth(x, box_pts, wh):
     if wh == "gaussian" :
@@ -81,7 +93,7 @@ def smooth(x, box_pts, wh):
 # Any kinds of filters can be used
 newNormList = savgol_filter(normList, 101, 3)
 #newNormList = smooth(normList, 50, "gaussian")
-plt.plot(newNormList[30:2000])
+plt.plot(newNormList)
 
 
 
@@ -106,7 +118,6 @@ plt.plot(movingAvgList[0:300])
 """
 
 
-
 diffList = []
 interval = int(FPS)*2
 for i in range(interval, len(newNormList)):
@@ -120,18 +131,20 @@ for i in range(interval, len(newNormList)):
     diff = diff/ len(range(i-(interval-1), i))
     diffList.append(diff)
 
+
 """
 diffList = diffList - st.mean(diffList)   
 diffList = list(diffList)
 for i in range(len(diffList)):
     if (diffList[i] < 0):
         diffList[i] = 0
-"""        
-plt.plot(diffList[30:10000])    
-    
 
-   
- 
+"""        
+plt.plot(diffList[0:2000])    
+
+
+
+
 capture.set(cv2.CAP_PROP_POS_AVI_RATIO,0)   
 #capture.set(1, interval-1)  
 cnt = 0
@@ -159,13 +172,18 @@ while True:
     #fgMask = backSub.apply(frame)
     
     selectedFramesSet.append(int(capture.get(cv2.CAP_PROP_POS_FRAMES)))
-    outLessMove.write(frame)
+    if(writeVideos==True):
+        outLessMove.write(frame)
+    if(writeImages==True):    
+        if not os.path.exists(url+fileName+"_less/"):
+            os.makedirs(url+fileName+"_less/")
+        cv2.imwrite(url+fileName+"_less/"+"frame"+str(int(capture.get(cv2.CAP_PROP_POS_FRAMES)))+".jpg", frame)
     
     """
     cv2.rectangle(frame, (10, 2), (100,20), (255,255,255), -1)
     cv2.putText(frame, str(capture.get(cv2.CAP_PROP_POS_FRAMES)), (15, 15),
                cv2.FONT_HERSHEY_SIMPLEX, 0.5 , (0,0,0))
-        
+    
     cv2.imshow('Frame', frame)
     #cv2.imshow('FG Mask', fgMask)
     
@@ -180,7 +198,10 @@ while True:
         percent = (i/totalFrames)*100
         print(str(round(percent)) + "%")
 
-outLessMove.release()    
+
+if(writeVideos==True):
+    outLessMove.release()    
+
 totaFramesSet = list(range(0, int(totalFrames)))    
 movingFramesSet = list(set(totaFramesSet) - set(selectedFramesSet))
 movingFramesSet.sort()
@@ -196,7 +217,12 @@ for i in movingFramesSet:
     capture.set(1, i-1)  
     ret, frame = capture.read() 
     
-    outHighMove.write(frame)
+    if(writeVideos==True):
+        outHighMove.write(frame)
+    if(writeImages==True):   
+        if not os.path.exists(url+fileName+"_high/"):
+            os.makedirs(url+fileName+"_high/")
+        cv2.imwrite(url+fileName+"_high/"+"frame"+str(int(capture.get(cv2.CAP_PROP_POS_FRAMES)))+".jpg", frame)
     
     """
     cv2.rectangle(frame, (10, 2), (100,20), (255,255,255), -1)
@@ -212,7 +238,9 @@ for i in movingFramesSet:
         percent = (j/jMax)*100
         print(str(round(percent)) + "%")
 
-outHighMove.release()    
+
+if(writeVideos==True):
+    outHighMove.release()
 
 
 
