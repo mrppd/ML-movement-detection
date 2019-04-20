@@ -15,15 +15,16 @@ import os
 import pickle
 
 
-url = "K:/pig_videos/Videos_ML_Project/"
-fileName = "Train1_Cam1"
+url = "D:/Faks/Master/Machine Learning in R/Project/Videos_ML_Project/"
+fileName = "Train1_Cam4"
 ext = ".mp4"
 way = 2
-threshold = 4   # for the way 1, different threshold values are needed. An intuitive guess can be made by observing the difference plot.
+threshold = 4  # for the way 1, different threshold values are needed.
+# An intuitive guess can be made by observing the difference plot.
 
-writeVideos = False
-writeImages = False
-showFrames = True
+writeVideos = True
+writeImages = True
+showFrames = False
 
 """
 sub = "MOG2"
@@ -45,34 +46,34 @@ frame_width = int(capture.get( cv2.CAP_PROP_FRAME_WIDTH))
 frame_height = int(capture.get( cv2.CAP_PROP_FRAME_HEIGHT))
 FPS = capture.get(cv2.CAP_PROP_FPS)
 # Initializing video writers 
-if(writeVideos==True):
+if writeVideos:
     outLessMove = cv2.VideoWriter(r'K:\pig_videos\Videos_ML_Project\less_movement_'+fileName+ext, cv2.VideoWriter_fourcc('A','V','C','1'), 
                                   FPS, (frame_width,frame_height), True)
     outHighMove = cv2.VideoWriter(r'K:\pig_videos\Videos_ML_Project\high_movement_'+fileName+ext, cv2.VideoWriter_fourcc('A','V','C','1'), 
                                   FPS, (frame_width,frame_height), True)
 
 
-#capture.set(cv2.CAP_PROP_POS_AVI_RATIO,1)
-#length = capture.get(cv2.CAP_PROP_POS_MSEC)
+# capture.set(cv2.CAP_PROP_POS_AVI_RATIO,1)
+# length = capture.get(cv2.CAP_PROP_POS_MSEC)
 totalFrames = capture.get(cv2.CAP_PROP_FRAME_COUNT)
-print("Tootal Frames: "+str(totalFrames) + "\n")
+print("Total Frames: "+str(totalFrames) + "\n")
 
 # Find the Frobenius Norms
 normList = []
 while True:
-    #capture.set(1, 3-1)    
+    # capture.set(1, 3-1)
     ret, frame = capture.read()
     if frame is None:
         break    
     
     # Converting the color frame to gray frame
     frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY);
-    #frame = cv2.GaussianBlur(frame, (21, 21), 0)
+    # frame = cv2.GaussianBlur(frame, (21, 21), 0)
     
     # Find the Frobenius Norm for single frame
     fnorm = np.linalg.norm(frame)
     normList.append(fnorm)
-    #print(fnorm)
+    # print(fnorm)
     """
     cv2.imshow('Frame', frame)
     keyboard = cv2.waitKey(30)
@@ -80,32 +81,30 @@ while True:
         break
     """
     # Show the percentage for Frobenius Norm calculation
-    #percent = (capture.get(cv2.CAP_PROP_POS_FRAMES)/totalFrames)*100
-    if(int(capture.get(cv2.CAP_PROP_POS_FRAMES))%1000==0):
+    # percent = (capture.get(cv2.CAP_PROP_POS_FRAMES)/totalFrames)*100
+    if int(capture.get(cv2.CAP_PROP_POS_FRAMES)) % 1000 == 0:
         percent = (capture.get(cv2.CAP_PROP_POS_FRAMES)/totalFrames)*100
         print(str(round(percent)) + "%")
-
 
 
 plt.plot(normList)
 
 # Smoothing the values using Savitzky–Golay filter 
-#https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter
+# https://en.wikipedia.org/wiki/Savitzky%E2%80%93Golay_filter
 # Any kinds of filters can be used
 newNormList = savgol_filter(normList, 101, 3)
 
 
 def smooth(x, box_pts, wh):
-    if wh == "gaussian" :
+    if wh == "gaussian":
         box = gaussian_filter(np.ones(box_pts), 1.5)
     elif wh == "box":
         box = np.ones(box_pts)/box_pts        
     x_smooth = np.convolve(x, box, mode='same')
     return x_smooth
 
-#newNormList = smooth(normList, 50, "gaussian") # gaussian or box
+# newNormList = smooth(normList, 50, "gaussian")  # gaussian or box
 plt.plot(newNormList)
-
 
 
 """
@@ -130,7 +129,7 @@ plt.plot(movingAvgList[0:300])
 
 
 # There are different ways to find the differences
-if(way==1):
+if way == 1:
     # Way 1: find the difference between the values of position i and i+interval
     # here interval is 2 * frames per seconds (FPS)
     # Moreover, taking the average of some of these consecutive differences will make the 
@@ -143,7 +142,7 @@ if(way==1):
         for j in range(i, i+interval):
             diff = diff + abs(newNormList[j]-newNormList[j+interval])
 
-        diff = diff/ interval
+        diff = diff / interval
         diffList.append(diff)
 else:
     # Way 2: find the difference between the values of position i and i+1
@@ -156,27 +155,26 @@ else:
         for j in range(i-(interval-1), i):
             diff = diff + abs(newNormList[j]-newNormList[j-1])
 
-        diff = diff/ len(range(i-(interval-1), i))
+        diff = diff / len(range(i-(interval-1), i))
         diffList.append(diff)     
 
-plt.plot(diffList[0:1000]) 
+plt.plot(diffList[0:1000])
 
 
-
-capture.set(cv2.CAP_PROP_POS_AVI_RATIO,0)   #start from the beginning
-#capture.set(1, interval-1)  
+capture.set(cv2.CAP_PROP_POS_AVI_RATIO, 0)  # start from the beginning
+# capture.set(1, interval-1)
 i = 0
 selectedFramesSet = []
 while True:
     ret, frame = capture.read()
     
-    if(i>=len(diffList)):
+    if i >= len(diffList):
         break
     
     # Skip all the frames with the corresponding diffList values which are greater than threshold.
-    if(diffList[i]>threshold):  
+    if diffList[i] > threshold:
         i = i+interval
-        if(i>totalFrames):
+        if i > totalFrames:
             break
         capture.set(1, i-1)  
         continue
@@ -184,52 +182,51 @@ while True:
     if frame is None:
         break
     
-    #print(ret)
+    # print(ret)
     
     # Select the less movement frames no
     selectedFramesSet.append(int(capture.get(cv2.CAP_PROP_POS_FRAMES)))
     
     # Make video using those selected less movement frames
-    if(writeVideos==True):
+    if writeVideos:
         outLessMove.write(frame)
     
     # Save less movement frames as jpeg
-    if(writeImages==True):    
+    if writeImages:
         if not os.path.exists(url+fileName+"_less/"):
             os.makedirs(url+fileName+"_less/")
         cv2.imwrite(url+fileName+"_less/"+"frame"+str(int(capture.get(cv2.CAP_PROP_POS_FRAMES)))+".jpg", frame)
     
     # Show less movement frames on screen
-    if(showFrames==True):
+    if showFrames:
         cv2.rectangle(frame, (10, 2), (100,20), (255,255,255), -1)
         cv2.putText(frame, str(capture.get(cv2.CAP_PROP_POS_FRAMES)), (15, 15),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5 , (0,0,0))
     
         cv2.imshow('Frame', frame)
-        #cv2.imshow('FG Mask', fgMask)
+        # cv2.imshow('FG Mask', fgMask)
         keyboard = cv2.waitKey(30)
         if keyboard == 'q' or keyboard == 27:
             break
     
     i = i + 1 
     # Show percentage
-    if(i%1000==0):
+    if i % 1000 == 0:
         percent = (i/totalFrames)*100
         print(str(round(percent)) + "%")
 
 
-if(writeVideos==True):
+if writeVideos:
     outLessMove.release()    
 
-totaFramesSet = list(range(0, int(totalFrames)))    
-movingFramesSet = list(set(totaFramesSet) - set(selectedFramesSet)) #Select the high movement frames
+totalFramesSet = list(range(0, int(totalFrames)))
+movingFramesSet = list(set(totalFramesSet) - set(selectedFramesSet))  # Select the high movement frames
 movingFramesSet.sort()
 selectedFramesSet.sort()
 
 
-
-#start from the beginning
-capture.set(cv2.CAP_PROP_POS_AVI_RATIO,0) 
+# start from the beginning
+capture.set(cv2.CAP_PROP_POS_AVI_RATIO,0)
 j = 0
 jMax = len(movingFramesSet)
 for i in movingFramesSet:
@@ -237,17 +234,17 @@ for i in movingFramesSet:
     ret, frame = capture.read() 
     
     # Make video using those selected high movement frames
-    if(writeVideos==True):
+    if writeVideos:
         outHighMove.write(frame)
         
     # Save high movement frames as jpeg
-    if(writeImages==True):   
+    if writeImages:
         if not os.path.exists(url+fileName+"_high/"):
             os.makedirs(url+fileName+"_high/")
         cv2.imwrite(url+fileName+"_high/"+"frame"+str(int(capture.get(cv2.CAP_PROP_POS_FRAMES)))+".jpg", frame)
     
     # Show less movement frames on screen
-    if(showFrames==True):
+    if showFrames:
         cv2.rectangle(frame, (10, 2), (100,20), (255,255,255), -1)
         cv2.putText(frame, str(capture.get(cv2.CAP_PROP_POS_FRAMES)), (15, 15),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.5 , (0,0,0))
@@ -258,18 +255,18 @@ for i in movingFramesSet:
     
     j = j + 1  
     # Show percentage
-    if(j%100==0):
+    if j % 100 == 0:
         percent = (j/jMax)*100
         print(str(round(percent)) + "%")
 
 
-if(writeVideos==True):
+if writeVideos:
     outHighMove.release()
 
 
 
 """
-# ovservation of less 
+# observation of less 
 capture.set(cv2.CAP_PROP_POS_AVI_RATIO,0) 
 for i in selectedFramesSet:
     capture.set(1, i-1)  
@@ -287,4 +284,4 @@ for i in selectedFramesSet:
 """
 
 # Closes all the frames
-cv2.destroyAllWindows()    
+cv2.destroyAllWindows()
