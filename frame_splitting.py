@@ -15,16 +15,16 @@ import os
 import pickle
 
 
-url = "D:/Faks/Master/Machine Learning in R/Project/Videos_ML_Project/"
+url = "D:/Faks/Master/Machine Learning in R/Project/Videos_ML_Project/Videos/"
 fileName = "Train1_Cam4"
 ext = ".mp4"
 way = 2
 threshold = 4  # for the way 1, different threshold values are needed.
 # An intuitive guess can be made by observing the difference plot.
 
-writeVideos = True
-writeImages = True
-showFrames = False
+writeVideos = False
+writeImages = False
+showFrames = True
 
 """
 sub = "MOG2"
@@ -104,7 +104,7 @@ def smooth(x, box_pts, wh):
     return x_smooth
 
 # newNormList = smooth(normList, 50, "gaussian")  # gaussian or box
-plt.plot(newNormList)
+plt.plot(newNormList[0:2000])
 
 
 """
