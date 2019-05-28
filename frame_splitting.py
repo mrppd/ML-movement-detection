@@ -15,16 +15,16 @@ import os
 import pickle
 
 
-url = "D:/Faks/Master/Machine Learning in R/Project/Videos_ML_Project/Videos/"
-fileName = "Train1_Cam4"
+url = "D:/Faks/Master/Machine Learning in R/Project/Videos_ML_Project/Train Videos/"
+fileName = "Train1_Cam5"
 ext = ".mp4"
 way = 2
 threshold = 4  # for the way 1, different threshold values are needed.
 # An intuitive guess can be made by observing the difference plot.
 
 writeVideos = False
-writeImages = False
-showFrames = True
+writeImages = True
+showFrames = False
 
 """
 sub = "MOG2"

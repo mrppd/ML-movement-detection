@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sun May  5 19:21:32 2019
-
+This is a custom script that I found on the internet that could help sometimes for splitting image dataset into trian/test/validation
 @author: petar
 """
 import os
 import shutil
 import time
+import numpy as np
 
 def split_dataset_into_test_and_train_sets(all_data_dir, training_data_dir, testing_data_dir, testing_data_pct):
     # Recreate testing and training directories
@@ -58,9 +59,9 @@ def split_dataset_into_test_and_train_sets(all_data_dir, training_data_dir, test
     print("Processed " + str(num_testing_files) + " testing files.")
     print('Spent time: {} seconds'.format(round(time.time() - start_time, 2)))
     
-data_dir = 'D:/Faks/Master/Machine Learning in R/Project/ML_CNN/Test'
-train_dir = 'D:/Faks/Master/Machine Learning in R/Project/ML_CNN/Validation'
-test_dir = 'D:/Faks/Master/Machine Learning in R/Project/ML_CNN/Test2'
-train_test_split = 0.5
+data_dir = 'D:/Faks/Master/Machine Learning in R/Project/Videos_ML_Project/Train Frames'
+train_dir = 'D:/Faks/Master/Machine Learning in R/Project/ML_CNN/Train'
+test_dir = 'D:/Faks/Master/Machine Learning in R/Project/ML_CNN/Test'
+train_test_split = 0.2
 
 split_dataset_into_test_and_train_sets(data_dir, train_dir, test_dir, train_test_split)
